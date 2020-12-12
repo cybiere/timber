@@ -2,6 +2,7 @@ use regex::Regex;
 use std::str::FromStr;
 use std::io;
 use std::error::Error;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 struct MatchRule {
@@ -107,11 +108,18 @@ fn main() {
     (?P<process>[[:alpha:]]+)(\[(?P<pid>\d+)\])?:\s
     (?P<message>.+)$").unwrap();
 
-    let rule_sshd = MatchRule{
-        name: String::from("ssh-all"),
+    let mut rules = HashMap::new();
+    rules.insert(String::from("sshd"),Vec::new());
+    rules.get_mut("sshd").unwrap().push(MatchRule{
+        name: String::from("ssh-accepted"),
         process: String::from("sshd"),
-        regex: Regex::new(r".").unwrap(),
-    };
+        regex: Regex::new(r"Accepted").unwrap(),
+    });
+    rules.get_mut("sshd").unwrap().push(MatchRule{
+        name: String::from("ssh-disconnect"),
+        process: String::from("sshd"),
+        regex: Regex::new(r"Disconnect").unwrap(),
+    });
 
     loop {
         let line = match read_line(){
@@ -122,8 +130,15 @@ fn main() {
             Ok(logline) => logline,
             Err(_) => continue,
         };
-        if rule_sshd.is_match(&logline){
-            println!(">> Match on rule {}. Raw line is: \n\t{}", rule_sshd.name, logline.raw);
+        let process_rules = match rules.get(&logline.process){
+            Some(v) => v,
+            None => continue,
+        };
+        for rule in process_rules {
+            if rule.is_match(&logline){
+                println!(">> Match on rule {}. Raw line is: \n\t{}", rule.name, logline.raw);
+            }
         }
+        
     }
 }
