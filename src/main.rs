@@ -30,6 +30,7 @@ struct LogLine {
     second: u8,
     level: String,
     process: String,
+    host: String,
     pid: Option<u32>,
     message: String,
     raw: String,
@@ -59,13 +60,14 @@ impl LogLine {
         let second = LogLine::clean_value(&caps, "second")?.unwrap();
         let level = LogLine::clean_value(&caps, "level")?.unwrap();
         let process = LogLine::clean_value(&caps, "process")?.unwrap();
+        let host = LogLine::clean_value(&caps, "host")?.unwrap();
         let pid = LogLine::clean_value(&caps, "pid")?;
         let message = LogLine::clean_value(&caps, "message")?.unwrap();
         
-        Ok(LogLine::build(year, month, day, hour, minute, second, level, process, pid, message, line))
+        Ok(LogLine::build(year, month, day, hour, minute, second, host, level, process, pid, message, line))
     }
 
-    fn build(year :u32, month :u8, day :u8, hour :u8, minute :u8, second :u8, level :String, process :String, pid :Option<u32>, message :String, line : &str) -> LogLine{
+    fn build(year :u32, month :u8, day :u8, hour :u8, minute :u8, second :u8, host :String, level :String, process :String, pid :Option<u32>, message :String, line : &str) -> LogLine{
         LogLine {
             year,
             month,
@@ -74,6 +76,7 @@ impl LogLine {
             minute,
             second,
             level,
+            host,
             process,
             pid,
             message,
@@ -133,6 +136,7 @@ fn format_syslog_ng_to_regex(src :&str) -> Regex {
                     "HOUR" => r"(?P<hour>\d{2})",
                     "MIN" => r"(?P<minute>\d{2})",
                     "SEC" => r"(?P<second>\d{2})",
+                    "HOST" => r"(?P<host>[[:alpha:]]+)",
                     "LEVEL" => r"(?P<level>[[:alpha:]]+)",
                     "MSGHDR" => r"(?P<process>[[:alpha:]]+)(\[(?P<pid>\d+)\])?:\s",
                     "MSG" => r"(?P<message>.+)",
@@ -151,7 +155,7 @@ fn format_syslog_ng_to_regex(src :&str) -> Regex {
 }
 
 fn main() {
-    let syslog_ng_format = "${YEAR}-${MONTH}-${DAY} ${HOUR}:${MIN}:${SEC} ${LEVEL} ${MSGHDR}${MSG}\n";
+    let syslog_ng_format = "${YEAR}-${MONTH}-${DAY} ${HOUR}:${MIN}:${SEC} ${HOST} ${LEVEL} ${MSGHDR}${MSG}\n";
     let format = format_syslog_ng_to_regex(syslog_ng_format);
 
     let mut rules = HashMap::new();
@@ -182,7 +186,7 @@ fn main() {
         };
         for rule in process_rules {
             if rule.is_match(&logline){
-                println!(">> Match on rule {}. Raw line is: \n\t{}", rule.name, logline.raw);
+                println!(">> Match on rule {} for host {}. Raw line is: \n\t{}", rule.name, logline.host, logline.raw);
             }
         }
         
