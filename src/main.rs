@@ -100,13 +100,59 @@ fn read_line() -> Option<String> {
     return Some(line)
 }
 
+fn format_syslog_ng_to_regex(src :&str) -> Regex {
+    let mut regex = String::from("^");
+    let mut iter = src.chars();
+    loop {
+        let c = match iter.next(){
+            Some(c) => c,
+            None => break
+        };
+        if c == '$'{
+            let n = match iter.next(){
+                Some(c) => c,
+                None => break,
+            };
+            if n == '{' {
+                let mut key = String::new();
+                loop {
+                    let k = match iter.next(){
+                        Some(c) => c,
+                        None => break,
+                    }; 
+                    if k == '}'{
+                        break
+                    }else{
+                        key.push(k);
+                    }
+                }
+                regex.push_str(match key.as_str(){
+                    "YEAR" => r"(?P<year>\d{4})",
+                    "MONTH" => r"(?P<month>\d{2})",
+                    "DAY" => r"(?P<day>\d{2})",
+                    "HOUR" => r"(?P<hour>\d{2})",
+                    "MIN" => r"(?P<minute>\d{2})",
+                    "SEC" => r"(?P<second>\d{2})",
+                    "LEVEL" => r"(?P<level>[[:alpha:]]+)",
+                    "MSGHDR" => r"(?P<process>[[:alpha:]]+)(\[(?P<pid>\d+)\])?:\s",
+                    "MSG" => r"(?P<message>.+)",
+                    _ => "",
+                });
+            }else{
+                regex.push(c);
+                regex.push(n);
+            }
+        }else if c != '\n'{
+            regex.push(c);
+        }
+    }
+    regex.push('$');
+    Regex::new(&regex).unwrap()
+}
+
 fn main() {
-    let format = Regex::new(r"(?x)^
-    (?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})\s
-    (?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2})\s
-    (?P<level>[[:alpha:]]+)\s
-    (?P<process>[[:alpha:]]+)(\[(?P<pid>\d+)\])?:\s
-    (?P<message>.+)$").unwrap();
+    let syslog_ng_format = "${YEAR}-${MONTH}-${DAY} ${HOUR}:${MIN}:${SEC} ${LEVEL} ${MSGHDR}${MSG}\n";
+    let format = format_syslog_ng_to_regex(syslog_ng_format);
 
     let mut rules = HashMap::new();
     rules.insert(String::from("sshd"),Vec::new());
