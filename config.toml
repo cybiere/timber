@@ -1,0 +1,1 @@
+log_format = "${YEAR}-${MONTH}-${DAY} ${HOUR}:${MIN}:${SEC} ${HOST} ${LEVEL} ${MSGHDR}${MSG}\n"
