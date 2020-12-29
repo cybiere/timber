@@ -32,6 +32,23 @@ impl MatchRule {
 }
 
 #[derive(Debug)]
+struct MatchedLine {
+    line: LogLine,
+    rule: &MatchRule,
+    fields: Option<HashMap<String,String>>,
+}
+
+impl MatchedLine {
+    fn new(line: LogLine, rule: &MatchRule) -> MatchedLine {
+        MatchedLine{
+            line: line,
+            rule: rule,
+            fields: None,
+        }
+    }
+}
+
+#[derive(Debug)]
 struct LogLine {
     year: u32,
     month: u8,
@@ -120,10 +137,17 @@ fn main() {
 
     let mut rules = HashMap::new();
     rules.insert(String::from("sshd"),Vec::new());
+    /*
     rules.get_mut("sshd").unwrap().push(MatchRule{
         name: String::from("ssh-accepted"),
         process: String::from("sshd"),
         regex: Regex::new(r"Accepted").unwrap(),
+    });
+    */
+    rules.get_mut("sshd").unwrap().push(MatchRule{
+        name: String::from("ssh-deny"),
+        process: String::from("sshd"),
+        regex: Regex::new(r"Failed password for invalid user (?P<username>.+) from (?P<src_ip>.+) port").unwrap(),
     });
     /*   
          rules.get_mut("sshd").unwrap().push(MatchRule{
@@ -148,7 +172,8 @@ fn main() {
         };
         for rule in process_rules {
             if rule.is_match(&logline){
-                println!(">> Match on rule {} for host {}. Raw line is: \n\t{}", rule.name, logline.host, logline.raw);
+                let matched_line = MatchedLine::new(logline, &rule);
+                println!("{:?}", matched_line);
             }
         }
 
