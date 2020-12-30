@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use structopt::StructOpt;
 use std::path::PathBuf;
+use std::rc::Rc;
 
 mod settings;
 mod parser;
@@ -11,27 +12,6 @@ struct Opt {
     #[structopt(parse(from_os_str), short, long)]
     config: Option<PathBuf>,
 }
-
-/*
-#[derive(Debug)]
-struct MatchedLine {
-    line: LogLine,
-    rule: &Rule,
-    fields: Option<HashMap<String,String>>,
-}²
-
-impl MatchedLine {
-    fn new(line: LogLine, rule: &Rule) -> MatchedLine {
-        MatchedLine{
-            line: line,
-            rule: rule,
-            fields: None,
-        }
-    }
-}
-*/
-
-
 
 fn main() {
     let opt = Opt::from_args();
@@ -49,7 +29,7 @@ fn main() {
             None => break
         }; 
         let logline = match parser::LogLine::from_string(&line,&settings){
-            Ok(logline) => logline,
+            Ok(logline) => Rc::new(logline),
             Err(_) => continue,
         };
         let process_rules = match rules.get(logline.process()){
@@ -57,11 +37,10 @@ fn main() {
             None => continue,
         };
         for rule in process_rules {
-            if rule.is_match(&logline){
-                println!(">Rule {} matched : \n\t{:?}",rule.name(),logline.raw())
-                //let matched_line = MatchedLine::new(logline, &rule);
-                //println!("{:?}", matched_line);
-            }
+            let _matched_line = match rule.is_match(&logline){
+                Some(line) => line,
+                None => continue,
+            };
         }
 
     }
