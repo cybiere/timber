@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use structopt::StructOpt;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -11,17 +10,14 @@ mod matcher;
 struct Opt {
     #[structopt(parse(from_os_str), short, long)]
     config: Option<PathBuf>,
+    #[structopt(parse(from_os_str), short, long)]
+    rulefile: Option<PathBuf>,
 }
 
 fn main() {
     let opt = Opt::from_args();
-    let settings = settings::Settings::load(opt.config.unwrap_or(PathBuf::from("/etc/timber/timber.conf")));
-
-    let mut rules = HashMap::new();
-    rules.insert(String::from("sshd"),Vec::new());
-    rules.get_mut("sshd").unwrap().push(matcher::Rule::new("ssh-accepted","sshd",r"Accepted"));
-    rules.get_mut("sshd").unwrap().push(matcher::Rule::new("ssh-disconnect","sshd",r"Disconnect"));
-    rules.get_mut("sshd").unwrap().push(matcher::Rule::new("ssh-deny","sshd",r"Failed password for invalid user (?P<username>.+) from (?P<src_ip>.+) port"));
+    let settings = settings::Settings::load(opt.config.unwrap_or(PathBuf::from("/etc/timber/config.toml")));
+    let rules = matcher::Rule::load(opt.rulefile.unwrap_or(PathBuf::from("/etc/timber/rules.timber")));
 
     loop {
         let line = match parser::read_line(){
