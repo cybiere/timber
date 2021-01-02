@@ -1,3 +1,4 @@
-ssh-accepted:sshd::Accepted
-ssh-disconnect:sshd::Disconnect
-ssh-deny:sshd::Failed password for invalid user (?P<username>.+) from (?P<src_ip>.+) port
+#ssh-accepted:sshd::Accepted
+#ssh-disconnect:sshd::Disconnect
+#ssh-deny:sshd::Failed password for invalid user (?P<username>.+) from (?P<src_ip>.+) port
+iptables-deny:kernel::DENY (?P<direction>INPUT|FORWARD|OUTPUT) IN=(?P<iface_in>\S*) OUT=(?P<iface_out>\S*) .*SRC=(?P<ip_src>\S+) DST=(?P<ip_dst>\S+) .*PROTO=(?P<proto>TCP|UDP|ICMP) SPT=(?P<port_src>[0-9]+) DPT=(?P<port_dst>[0-9]+)

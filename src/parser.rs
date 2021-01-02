@@ -51,11 +51,11 @@ impl LogLine {
         &self.message
     }
 
-    fn clean_value<T: FromStr>(caps: &regex::Captures,key :&str) -> Result<Option<T>,Box<dyn Error>> {
+    fn clean_value<T: FromStr>(caps: &regex::Captures,key :&str) -> Result<Option<T>,String> {
         match caps.name(key) {
             Some(value) => match value.as_str().parse::<T>(){
                 Ok(value) => Ok(Some(value)),
-                Err(_) => Err(format!("Could not parse '{:?}'",value).into()),
+                Err(_) => Err(format!("Could not parse '{:?}'",value)),
             },
             None => Ok(None),
         }
