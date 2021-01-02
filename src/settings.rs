@@ -45,7 +45,7 @@ pub mod syslog_ng_to_regex {
                             "SEC" => r"(?P<second>\d{2})",
                             "HOST" => r"(?P<host>\S+)",
                             "LEVEL" => r"(?P<level>[[:alpha:]]+)",
-                            "MSGHDR" => r"(?P<process>\S+)(\[(?P<pid>\d+)\])?:\s",
+                            "MSGHDR" => r"(?P<process>[a-zA-Z0-9_\.-]+)(\[(?P<pid>\d+)\])?:\s",
                             "MSG" => r"(?P<message>.+)",
                             _ => "",
                         });

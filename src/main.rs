@@ -32,12 +32,12 @@ fn main() {
             Ok(logline) => Rc::new(logline),
             Err(_) => continue,
         };
-        //Get rules for log line process
+        //Get rules matching current log line process
         let process_rules = match rules.get(logline.process()){
             Some(rules_vect) => rules_vect,
             None => continue,
         };
-        //For each rule in log process, see if line matches
+        //For each rule concerning the log line process, see if line matches
         for rule in process_rules {
             let _matched_line = match rule.is_match(&logline){
                 Some(line) => line,

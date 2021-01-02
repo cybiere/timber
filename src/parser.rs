@@ -1,4 +1,3 @@
-use std::error::Error;
 use std::str::FromStr;
 use std::io;
 
@@ -61,10 +60,10 @@ impl LogLine {
         }
     }
 
-    pub fn from_string(line: &str, settings :&Settings) -> Result<LogLine,Box<dyn Error>> {
+    pub fn from_string<'a>(line: &'a str, settings :&Settings) -> Result<LogLine,String> {
         let caps = match settings.log_format.captures(&line){
             Some(caps) => caps,
-            None => return Err("Line does not match specified format.".into()),
+            None => return Err(String::from("Line does not match specified format.")),
         };
         let year = LogLine::clean_value(&caps, "year")?.unwrap();
         let month = LogLine::clean_value(&caps, "month")?.unwrap();

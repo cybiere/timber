@@ -55,11 +55,31 @@ impl Rule {
         if self.process != line.process(){
             return None
         }
-        if self.regex.is_match(line.message()){
+        let fields: Option<HashMap<String,String>>;
+        let found: bool;
+        if self.regex.captures_len() > 1 {
+            found = match self.regex.captures(line.message()){
+                None => { fields = None; false},
+                Some(caps) => {
+                    let mut fields_content = HashMap::new();
+                    for capture_name in self.regex.capture_names(){
+                        if let Some(name) = capture_name{
+                            fields_content.insert(String::from(name),String::from(caps.name(name).unwrap().as_str()));
+                        }
+                    }
+                    fields = Some(fields_content);
+                    true
+                }
+            };
+        }else{
+            found = self.regex.is_match(line.message());
+            fields = None;
+        }
+        if found{
             let matched_line = MatchedLine{
                 rule :self,
                 line : Rc::clone(line),
-                fields : None
+                fields : fields
             };
             self.alert(&matched_line);
             return Some(matched_line)
@@ -68,7 +88,7 @@ impl Rule {
     }
 
     fn alert(&self, matched_line : &MatchedLine) -> (){
-        println!("> Rule {} matched : \n\t{:?}",self.name, matched_line.line.raw())
+        println!("> Rule {} matched : \n{:#?}",self.name, matched_line)
     }
 }
 
