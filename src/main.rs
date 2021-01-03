@@ -5,6 +5,7 @@ use std::rc::Rc;
 mod settings;
 mod parser;
 mod matcher;
+mod alerter;
 
 #[derive(Debug, StructOpt)]
 struct Opt {
@@ -12,6 +13,8 @@ struct Opt {
     config: Option<PathBuf>,
     #[structopt(parse(from_os_str), short, long)]
     rulefile: Option<PathBuf>,
+    #[structopt(parse(from_os_str), short, long)]
+    triggers: Option<PathBuf>,
 }
 
 fn main() {
@@ -20,6 +23,8 @@ fn main() {
     let settings = settings::Settings::load(opt.config.unwrap_or(PathBuf::from("/etc/timber/config.toml")));
     //Load rules
     let rules = matcher::Rule::load(opt.rulefile.unwrap_or(PathBuf::from("/etc/timber/rules.timber")));
+    //Load triggers
+    let triggers = alerter::Trigger::load(opt.triggers.unwrap_or(PathBuf::from("/etc/timber/trigger.toml")));
 
     loop {
         //Read a log line

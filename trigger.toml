@@ -1,0 +1,38 @@
+[[trigger]]
+    name = "portscan"
+    keys = ["host","ip_src","ip_dst"]
+    integrity = [
+        ["deny1.ip_src","deny2.ip_src","deny3.ip_src"],
+        ["deny1.ip_dst","deny2.ip_dst","deny3.ip_dst"]
+    ]
+    [trigger.init]
+        host = "%HOST%"
+        ip_src = "deny1.ip_src"
+        ip_dst = "deny1.ip_dst"
+    [[trigger.rules]]
+        ref = "deny1"
+        rulename = "iptables-deny"
+    [[trigger.rules]]
+        ref = "deny2"
+        rulename = "iptables-deny"
+    [[trigger.rules]]
+        ref = "deny3"
+        rulename = "iptables-deny"
+[[trigger]]
+    name = "ssh-bruteforce"
+    keys = ["host","ip_src"]
+    integrity = [
+        ["deny1.ip_src","deny2.ip_src","deny3.ip_src"]
+    ]
+    [trigger.init]
+        host = "%HOST%"
+        ip_src = "deny1.ip_src"
+    [[trigger.rules]]
+        ref = "deny1"
+        rulename = "ssh-deny"
+    [[trigger.rules]]
+        ref = "deny2"
+        rulename = "ssh-deny"
+    [[trigger.rules]]
+        ref = "deny3"
+        rulename = "ssh-deny"
